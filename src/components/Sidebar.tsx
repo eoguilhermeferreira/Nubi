@@ -71,7 +71,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="flex items-center justify-between px-4 py-4">
           <div className="flex items-center gap-2">
             <span className="text-base font-semibold text-slate-100 tracking-tight">
-              Nubi
+              Nubi.ia
             </span>
           </div>
 

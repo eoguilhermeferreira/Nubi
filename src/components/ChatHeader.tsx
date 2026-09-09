@@ -17,7 +17,6 @@ import {
 import { toast } from "sonner";
 
 interface ChatHeaderProps {
-  conversationTitle?: string | undefined;
   modelName?: string;
   onOpenMobileSidebar: () => void;
   onClearChat?: () => void;
@@ -27,7 +26,6 @@ interface ChatHeaderProps {
 }
 
 export const ChatHeader: React.FC<ChatHeaderProps> = ({
-  conversationTitle,
   modelName = "Nubi 3.5",
   onOpenMobileSidebar,
   onClearChat,
@@ -52,10 +50,10 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
 
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold text-slate-100 tracking-tight">
-            Nubi
+            Nubi.ia
           </span>
           <span className="text-xs text-slate-500 font-normal">
-            {conversationTitle ? `• ${conversationTitle}` : `• ${modelName}`}
+            • {modelName}
           </span>
         </div>
       </div>
