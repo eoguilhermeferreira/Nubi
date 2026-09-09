@@ -126,8 +126,6 @@ export const OrionApp: React.FC = () => {
     };
   }, [activeId]);
 
-  const activeConversation = conversations.find((c) => c.id === activeId);
-
   const bumpConversation = (id: string) => {
     setConversations((prev) => {
       const target = prev.find((c) => c.id === id);
@@ -317,7 +315,6 @@ export const OrionApp: React.FC = () => {
 
       <main className="flex-1 flex flex-col h-full min-w-0 bg-[#050B14] relative">
         <ChatHeader
-          conversationTitle={activeConversation?.title}
           modelName={selectedModel}
           onOpenMobileSidebar={() => setIsMobileOpen(true)}
           onClearChat={handleClearCurrentChat}
