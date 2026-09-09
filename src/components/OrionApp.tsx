@@ -287,7 +287,7 @@ export const OrionApp: React.FC = () => {
     !activeId || (!isLoadingMessages && messages.length === 0);
 
   return (
-    <div className="flex h-screen w-screen bg-[#050B14] text-slate-100 overflow-hidden font-sans antialiased">
+    <div className="flex h-dvh w-screen bg-[#050B14] text-slate-100 overflow-hidden font-sans antialiased">
       <Toaster position="top-right" theme="dark" />
 
       {isMobileOpen && (

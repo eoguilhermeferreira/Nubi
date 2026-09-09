@@ -74,7 +74,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto px-4 pb-4 pt-1">
+    <div className="w-full max-w-3xl mx-auto px-4 pt-1 pb-[calc(1rem+env(safe-area-inset-bottom))]">
       <form
         onSubmit={handleSubmit}
         className={`

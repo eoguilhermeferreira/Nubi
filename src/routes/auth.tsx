@@ -114,14 +114,14 @@ function AuthPage() {
 
   if (checking) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-[#050B14]">
+      <div className="flex h-dvh w-screen items-center justify-center bg-[#050B14]">
         <Loader2 className="w-4 h-4 text-slate-600 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen w-screen items-center justify-center bg-[#050B14] text-slate-100 font-sans antialiased px-4">
+    <div className="flex h-dvh w-screen items-center justify-center bg-[#050B14] text-slate-100 font-sans antialiased px-4">
       <Toaster position="top-right" theme="dark" />
 
       <div className="w-full max-w-[360px]">
