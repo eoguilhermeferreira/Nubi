@@ -20,6 +20,7 @@ import { ChatHeader } from "./ChatHeader";
 import { ChatEmptyState } from "./ChatEmptyState";
 import { MessageList } from "./MessageList";
 import { ChatInput } from "./ChatInput";
+import { VoiceCallModal } from "./VoiceCallModal";
 import { SettingsModal } from "./SettingsModal";
 import { AboutModal } from "./AboutModal";
 import { Toaster } from "./ui/sonner";
@@ -53,6 +54,7 @@ export const OrionApp: React.FC = () => {
   const [isMobileOpen, setIsMobileOpen] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [isAboutOpen, setIsAboutOpen] = useState<boolean>(false);
+  const [isVoiceModeOpen, setIsVoiceModeOpen] = useState<boolean>(false);
 
   // Sessão + perfil
   useEffect(() => {
@@ -206,13 +208,25 @@ export const OrionApp: React.FC = () => {
     }
   };
 
-  const triggerAiResponse = async (targetConvId: string, history: Message[]) => {
-    if (!userId) return;
+  const triggerAiResponse = async (
+    targetConvId: string,
+    history: Message[],
+  ): Promise<string | null> => {
+    if (!userId) return null;
     setIsLoading(true);
     try {
       const { content: reply } = await generateAssistantReplyFn({
         data: {
-          messages: history.map((m) => ({ role: m.role, content: m.content })),
+          messages: history.map((m) => ({
+            role: m.role,
+            content: m.content,
+            attachments: m.attachments?.map((a) => ({
+              path: a.path,
+              mimeType: a.mimeType,
+              name: a.name,
+              kind: a.kind,
+            })),
+          })),
         },
       });
       const saved = await insertMessage({
@@ -223,9 +237,11 @@ export const OrionApp: React.FC = () => {
       });
       setMessages((prev) => (targetConvId === activeIdRef.current ? [...prev, saved] : prev));
       bumpConversation(targetConvId);
+      return reply;
     } catch (err) {
       console.error("[nubi] erro ao gerar/salvar resposta:", err);
       toast.error("Não foi possível gerar a resposta da IA");
+      return null;
     } finally {
       setIsLoading(false);
     }
@@ -239,8 +255,8 @@ export const OrionApp: React.FC = () => {
 
   const handleSendMessage = async (text: string, attachments?: Attachment[]) => {
     if (!userId || isLoading) return;
-    const content = text.trim() || (attachments?.length ? "Anexo enviado" : "");
-    if (!content) return;
+    const content = text.trim();
+    if (!content && !attachments?.length) return;
 
     let conversationId = activeId;
     let historyBase = messages;
@@ -263,6 +279,7 @@ export const OrionApp: React.FC = () => {
         userId,
         role: "user",
         content,
+        attachments,
       });
       setMessages((prev) => [...prev, saved]);
       bumpConversation(conversationId);
@@ -276,6 +293,38 @@ export const OrionApp: React.FC = () => {
 
   const handleSelectPrompt = (promptText: string) => {
     void handleSendMessage(promptText);
+  };
+
+  const handleVoiceTurn = async (transcript: string): Promise<string> => {
+    if (!userId) throw new Error("Sem sessão ativa");
+    const content = transcript.trim();
+    if (!content) throw new Error("Áudio vazio");
+
+    let conversationId = activeId;
+    let historyBase = messages;
+
+    if (!conversationId) {
+      const conv = await createConversation(userId, buildTitle(content));
+      conversationId = conv.id;
+      setConversations((prev) => [conv, ...prev]);
+      setActiveId(conv.id);
+      activeIdRef.current = conv.id;
+      setMessages([]);
+      historyBase = [];
+    }
+
+    const savedUser = await insertMessage({
+      conversationId,
+      userId,
+      role: "user",
+      content,
+    });
+    setMessages((prev) => [...prev, savedUser]);
+    bumpConversation(conversationId);
+
+    const reply = await triggerAiResponse(conversationId, [...historyBase, savedUser]);
+    if (!reply) throw new Error("Não foi possível gerar a resposta");
+    return reply;
   };
 
   const handleRegenerateResponse = () => {
@@ -342,11 +391,18 @@ export const OrionApp: React.FC = () => {
 
         <ChatInput
           onSendMessage={handleSendMessage}
+          onOpenVoiceMode={() => setIsVoiceModeOpen(true)}
           isLoading={isLoading || isCreating}
-          selectedModel={selectedModel}
-          onSelectModel={setSelectedModel}
+          userId={userId}
+          conversationId={activeId}
         />
       </main>
+
+      <VoiceCallModal
+        isOpen={isVoiceModeOpen}
+        onClose={() => setIsVoiceModeOpen(false)}
+        onTurn={handleVoiceTurn}
+      />
 
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
 

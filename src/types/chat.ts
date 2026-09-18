@@ -1,10 +1,14 @@
 export type MessageRole = "user" | "assistant";
 
+export type AttachmentKind = "image" | "pdf" | "other";
+
 export interface Attachment {
   id: string;
   name: string;
-  size: string;
-  type: "file" | "image";
+  mimeType: string;
+  size: number;
+  path: string;
+  kind: AttachmentKind;
 }
 
 export interface Message {
