@@ -2,8 +2,8 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { Conversation, Message, Attachment, UserProfile } from "../types/chat";
-import { MOCK_RESPONSES } from "../mock/initialData";
 import { supabase } from "@/integrations/supabase/client";
+import { generateAssistantReplyFn } from "../lib/nubi-ai.functions";
 import {
   buildTitle,
   createConversation,
@@ -150,9 +150,7 @@ export const OrionApp: React.FC = () => {
     if (!title) return;
     const previous = conversations;
     setBusyConvId(id);
-    setConversations((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, title } : c)),
-    );
+    setConversations((prev) => prev.map((c) => (c.id === id ? { ...c, title } : c)));
     try {
       await renameConversationApi(id, title);
       toast.success("Conversa renomeada");
@@ -208,26 +206,26 @@ export const OrionApp: React.FC = () => {
     }
   };
 
-  const triggerAiResponse = async (targetConvId: string) => {
+  const triggerAiResponse = async (targetConvId: string, history: Message[]) => {
     if (!userId) return;
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 900));
-    const reply =
-      MOCK_RESPONSES[Math.floor(Math.random() * MOCK_RESPONSES.length)]!;
     try {
+      const { content: reply } = await generateAssistantReplyFn({
+        data: {
+          messages: history.map((m) => ({ role: m.role, content: m.content })),
+        },
+      });
       const saved = await insertMessage({
         conversationId: targetConvId,
         userId,
         role: "assistant",
         content: reply,
       });
-      setMessages((prev) =>
-        targetConvId === activeIdRef.current ? [...prev, saved] : prev,
-      );
+      setMessages((prev) => (targetConvId === activeIdRef.current ? [...prev, saved] : prev));
       bumpConversation(targetConvId);
     } catch (err) {
-      console.error("[nubi] erro ao salvar resposta:", err);
-      toast.error("Não foi possível salvar a resposta");
+      console.error("[nubi] erro ao gerar/salvar resposta:", err);
+      toast.error("Não foi possível gerar a resposta da IA");
     } finally {
       setIsLoading(false);
     }
@@ -245,6 +243,7 @@ export const OrionApp: React.FC = () => {
     if (!content) return;
 
     let conversationId = activeId;
+    let historyBase = messages;
 
     try {
       if (!conversationId) {
@@ -255,6 +254,7 @@ export const OrionApp: React.FC = () => {
         setActiveId(conv.id);
         activeIdRef.current = conv.id;
         setMessages([]);
+        historyBase = [];
         setIsCreating(false);
       }
 
@@ -266,7 +266,7 @@ export const OrionApp: React.FC = () => {
       });
       setMessages((prev) => [...prev, saved]);
       bumpConversation(conversationId);
-      void triggerAiResponse(conversationId);
+      void triggerAiResponse(conversationId, [...historyBase, saved]);
     } catch (err) {
       console.error("[nubi] erro ao enviar mensagem:", err);
       setIsCreating(false);
@@ -280,11 +280,12 @@ export const OrionApp: React.FC = () => {
 
   const handleRegenerateResponse = () => {
     if (!activeId || messages.length === 0) return;
-    void triggerAiResponse(activeId);
+    const lastUserIndex = messages.map((m) => m.role).lastIndexOf("user");
+    const history = lastUserIndex === -1 ? messages : messages.slice(0, lastUserIndex + 1);
+    void triggerAiResponse(activeId, history);
   };
 
-  const showEmptyState =
-    !activeId || (!isLoadingMessages && messages.length === 0);
+  const showEmptyState = !activeId || (!isLoadingMessages && messages.length === 0);
 
   return (
     <div className="flex h-dvh w-screen bg-[#050B14] text-slate-100 overflow-hidden font-sans antialiased">
@@ -347,10 +348,7 @@ export const OrionApp: React.FC = () => {
         />
       </main>
 
-      <SettingsModal
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-      />
+      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
 
       <AboutModal isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} />
     </div>

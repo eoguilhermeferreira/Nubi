@@ -1,19 +1,37 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Message } from "../types/chat";
-import { Copy, Check, ThumbsUp, ThumbsDown, FileText } from "lucide-react";
+import {
+  Copy,
+  Check,
+  ThumbsUp,
+  ThumbsDown,
+  FileText,
+  Volume2,
+  Square,
+  Loader2,
+} from "lucide-react";
 import { toast } from "sonner";
+import { synthesizeSpeechFn } from "../lib/nubi-ai.functions";
 
 interface MessageBubbleProps {
   message: Message;
   onRegenerate?: (() => void) | undefined;
 }
 
-export const MessageBubble: React.FC<MessageBubbleProps> = ({
-  message,
-}) => {
+export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
   const isUser = message.role === "user";
   const [copied, setCopied] = useState(false);
   const [feedback, setFeedback] = useState<"up" | "down" | null>(null);
+  const [audioState, setAudioState] = useState<"idle" | "loading" | "playing">("idle");
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioUrlRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      audioRef.current?.pause();
+      if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current);
+    };
+  }, []);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(message.content);
@@ -24,6 +42,42 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
 
   const handleFeedback = (type: "up" | "down") => {
     setFeedback(feedback === type ? null : type);
+  };
+
+  const handleToggleSpeech = async () => {
+    if (audioState === "playing") {
+      audioRef.current?.pause();
+      setAudioState("idle");
+      return;
+    }
+    if (audioState === "loading") return;
+
+    setAudioState("loading");
+    try {
+      const { audioBase64, mimeType } = await synthesizeSpeechFn({
+        data: { text: message.content },
+      });
+
+      const byteChars = atob(audioBase64);
+      const bytes = new Uint8Array(byteChars.length);
+      for (let i = 0; i < byteChars.length; i++) bytes[i] = byteChars.charCodeAt(i);
+      const blob = new Blob([bytes], { type: mimeType });
+
+      if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current);
+      const url = URL.createObjectURL(blob);
+      audioUrlRef.current = url;
+
+      const audio = audioRef.current ?? new Audio();
+      audio.src = url;
+      audio.onended = () => setAudioState("idle");
+      audioRef.current = audio;
+      await audio.play();
+      setAudioState("playing");
+    } catch (err) {
+      console.error("[nubi] erro ao gerar áudio:", err);
+      toast.error("Não foi possível gerar o áudio");
+      setAudioState("idle");
+    }
   };
 
   return (
@@ -42,19 +96,13 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
 
       <div className={`flex flex-col max-w-[85%] ${isUser ? "items-end" : "items-start"}`}>
         {/* Role & Time */}
-        <div className="text-[11px] text-slate-500 mb-1 px-0.5">
-          {isUser ? "Você" : "Nubi"}
-        </div>
+        <div className="text-[11px] text-slate-500 mb-1 px-0.5">{isUser ? "Você" : "Nubi"}</div>
 
         {/* Message Bubble Body */}
         <div
           className={`
             p-3 rounded-lg leading-relaxed whitespace-pre-wrap break-words
-            ${
-              isUser
-                ? "bg-[#0E1C30] text-slate-100"
-                : "text-slate-200"
-            }
+            ${isUser ? "bg-[#0E1C30] text-slate-100" : "text-slate-200"}
           `}
         >
           {/* Attachments if any */}
@@ -79,11 +127,31 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
         {!isUser && (
           <div className="flex items-center gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
+              onClick={handleToggleSpeech}
+              aria-label={audioState === "playing" ? "Parar áudio" : "Ouvir resposta"}
+              className={`p-1 rounded transition-colors ${
+                audioState === "playing" ? "text-blue-400" : "text-slate-500 hover:text-slate-300"
+              }`}
+            >
+              {audioState === "loading" ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : audioState === "playing" ? (
+                <Square className="w-3.5 h-3.5" />
+              ) : (
+                <Volume2 className="w-3.5 h-3.5" />
+              )}
+            </button>
+
+            <button
               onClick={handleCopy}
               aria-label="Copiar"
               className="p-1 rounded text-slate-500 hover:text-slate-300 transition-colors"
             >
-              {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+              {copied ? (
+                <Check className="w-3.5 h-3.5 text-emerald-400" />
+              ) : (
+                <Copy className="w-3.5 h-3.5" />
+              )}
             </button>
 
             <button

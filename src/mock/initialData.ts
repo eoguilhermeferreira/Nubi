@@ -213,10 +213,3 @@ Semana 4: Testes unitários e construção de uma biblioteca tipada.`,
     ],
   },
 ];
-
-export const MOCK_RESPONSES = [
-  "Entendi perfeitamente. Como esta é uma demonstração local da Nubi, posso ajudar você a explorar essa ideia com uma explicação direta e clara.",
-  "Compreendi o seu objetivo. Segue uma orientação simples e focada nos pontos mais importantes.",
-  "Ótima pergunta! Para resolver isso sem complicação, recomendo seguir estas etapas sequenciais.",
-  "Entendido. Essa é uma excelente questão. O caminho mais direto envolve focar primeiro na simplicidade da solução.",
-];
