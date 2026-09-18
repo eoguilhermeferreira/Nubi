@@ -49,7 +49,7 @@ export const OrionApp: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false); // resposta da IA / envio
   const [busyConvId, setBusyConvId] = useState<string | null>(null);
 
-  const [selectedModel, setSelectedModel] = useState<string>("Nubi 3.5");
+  const [selectedModel, setSelectedModel] = useState<string>("3.5");
   const [isMobileOpen, setIsMobileOpen] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [isAboutOpen, setIsAboutOpen] = useState<boolean>(false);

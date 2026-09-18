@@ -96,7 +96,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
 
       <div className={`flex flex-col max-w-[85%] ${isUser ? "items-end" : "items-start"}`}>
         {/* Role & Time */}
-        <div className="text-[11px] text-slate-500 mb-1 px-0.5">{isUser ? "Você" : "Nubi"}</div>
+        <div className="text-[11px] text-slate-500 mb-1 px-0.5">{isUser ? "Você" : "Nubi.ia"}</div>
 
         {/* Message Bubble Body */}
         <div

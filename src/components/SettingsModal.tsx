@@ -1,10 +1,5 @@
 import React, { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "./ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { toast } from "sonner";
 
@@ -13,10 +8,7 @@ interface SettingsModalProps {
   onClose: () => void;
 }
 
-export const SettingsModal: React.FC<SettingsModalProps> = ({
-  isOpen,
-  onClose,
-}) => {
+export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
   const [autoScroll, setAutoScroll] = useState(true);
 
   const handleSave = () => {
@@ -29,7 +21,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       <DialogContent className="sm:max-w-md bg-[#0A1424] border-[#0F1C30] text-slate-100 p-5 rounded-xl shadow-xl">
         <DialogHeader>
           <DialogTitle className="text-base font-semibold text-white">
-            Configurações da Nubi
+            Configurações da Nubi.ia
           </DialogTitle>
         </DialogHeader>
 
@@ -37,7 +29,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           <div className="flex items-center justify-between p-3 rounded-lg bg-[#050B14] border border-[#0F1C30]">
             <div>
               <div className="font-medium text-slate-200">Rolagem automática</div>
-              <div className="text-[11px] text-slate-500">Rolar automaticamente para novas mensagens</div>
+              <div className="text-[11px] text-slate-500">
+                Rolar automaticamente para novas mensagens
+              </div>
             </div>
             <input
               type="checkbox"

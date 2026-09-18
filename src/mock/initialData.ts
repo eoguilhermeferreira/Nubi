@@ -26,14 +26,16 @@ export const PROMPT_SUGGESTIONS: PromptSuggestion[] = [
     id: "sug-3",
     title: "Analise um problema",
     subtitle: "Encontre soluções estratégicas e diagnósticos práticos",
-    prompt: "Estou tendo dificuldades de retenção de usuários no meu aplicativo web. Quais pontos analisar?",
+    prompt:
+      "Estou tendo dificuldades de retenção de usuários no meu aplicativo web. Quais pontos analisar?",
     iconName: "code",
   },
   {
     id: "sug-4",
     title: "Escreva um texto",
     subtitle: "Rascunhos de e-mails, artigos técnicos ou mensagens",
-    prompt: "Escreva um e-mail curto e profissional apresentando nossa nova solução para um cliente.",
+    prompt:
+      "Escreva um e-mail curto e profissional apresentando nossa nova solução para um cliente.",
     iconName: "pen",
   },
 ];
@@ -43,7 +45,7 @@ export const INITIAL_CONVERSATIONS: Conversation[] = [
     id: "conv-1",
     title: "Como funciona energia solar?",
     createdAt: "Hoje, 14:32",
-    model: "Nubi 3.5",
+    model: "3.5",
     messages: [
       {
         id: "m1-1",
@@ -87,12 +89,13 @@ Como os painéis possuem durabilidade superior a 25 anos, você desfrutará de m
     id: "conv-2",
     title: "Ideias para meu projeto",
     createdAt: "Hoje, 11:15",
-    model: "Nubi Pro",
+    model: "Pro",
     messages: [
       {
         id: "m2-1",
         role: "user",
-        content: "Preciso de sugestões de projetos web modernos para meu portfólio de desenvolvedor.",
+        content:
+          "Preciso de sugestões de projetos web modernos para meu portfólio de desenvolvedor.",
         createdAt: "11:15",
       },
       {
@@ -116,7 +119,7 @@ Identifica problemas de contraste e acessibilidade visual em interfaces.`,
     id: "conv-3",
     title: "Planejamento de estudos",
     createdAt: "Ontem, 19:40",
-    model: "Nubi 3.5",
+    model: "3.5",
     messages: [
       {
         id: "m3-1",
@@ -141,7 +144,7 @@ Semana 4: Testes unitários e construção de uma biblioteca tipada.`,
     id: "conv-4",
     title: "Análise de documento",
     createdAt: "Ontem, 16:05",
-    model: "Nubi Ultra",
+    model: "Ultra",
     messages: [
       {
         id: "m4-1",
@@ -167,7 +170,7 @@ Semana 4: Testes unitários e construção de uma biblioteca tipada.`,
     id: "conv-5",
     title: "Dúvida sobre programação",
     createdAt: "28 Ago, 10:12",
-    model: "Nubi Code",
+    model: "Code",
     messages: [
       {
         id: "m5-1",
@@ -192,7 +195,7 @@ Semana 4: Testes unitários e construção de uma biblioteca tipada.`,
     id: "conv-6",
     title: "Criar uma estratégia de marketing",
     createdAt: "25 Ago, 18:22",
-    model: "Nubi Pro",
+    model: "Pro",
     messages: [
       {
         id: "m6-1",

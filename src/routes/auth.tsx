@@ -10,16 +10,16 @@ export const Route = createFileRoute("/auth")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Entrar na Nubi" },
+      { title: "Entrar na Nubi.ia" },
       {
         name: "description",
         content:
-          "Acesse sua conta Nubi para retomar suas conversas com histórico salvo e sincronizado.",
+          "Acesse sua conta Nubi.ia para retomar suas conversas com histórico salvo e sincronizado.",
       },
-      { property: "og:title", content: "Entrar na Nubi" },
+      { property: "og:title", content: "Entrar na Nubi.ia" },
       {
         property: "og:description",
-        content: "Acesse sua conta Nubi e retome suas conversas.",
+        content: "Acesse sua conta Nubi.ia e retome suas conversas.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -74,7 +74,7 @@ function AuthPage() {
       if (data.session) {
         navigate({ to: "/", replace: true });
       } else {
-        toast.info("Confirme seu e-mail para acessar a Nubi.");
+        toast.info("Confirme seu e-mail para acessar a Nubi.ia.");
       }
     } catch (err) {
       console.error("[auth]", err);
@@ -130,7 +130,7 @@ function AuthPage() {
             N
           </div>
           <h1 className="text-lg font-medium text-slate-100">
-            {mode === "login" ? "Entrar na Nubi" : "Criar conta na Nubi"}
+            {mode === "login" ? "Entrar na Nubi.ia" : "Criar conta na Nubi.ia"}
           </h1>
           <p className="mt-1 text-xs text-slate-500">
             Suas conversas ficam salvas e sincronizadas.

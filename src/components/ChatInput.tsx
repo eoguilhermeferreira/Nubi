@@ -10,10 +10,7 @@ interface ChatInputProps {
   onSelectModel: (model: string) => void;
 }
 
-export const ChatInput: React.FC<ChatInputProps> = ({
-  onSendMessage,
-  isLoading = false,
-}) => {
+export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, isLoading = false }) => {
   const [text, setText] = useState("");
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [isRecording, setIsRecording] = useState(false);
@@ -22,10 +19,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = `${Math.min(
-        textareaRef.current.scrollHeight,
-        160
-      )}px`;
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 160)}px`;
     }
   }, [text]);
 
@@ -116,7 +110,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
           disabled={isLoading}
-          placeholder="Mensagem para Nubi..."
+          placeholder="Mensagem para Nubi.ia..."
           rows={1}
           className="
             w-full bg-transparent text-slate-100 placeholder:text-slate-500
