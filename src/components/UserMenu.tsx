@@ -15,11 +15,7 @@ interface UserMenuProps {
   onSignOut: () => void;
 }
 
-export const UserMenu: React.FC<UserMenuProps> = ({
-  user,
-  onOpenSettings,
-  onSignOut,
-}) => {
+export const UserMenu: React.FC<UserMenuProps> = ({ user, onOpenSettings, onSignOut }) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -32,12 +28,8 @@ export const UserMenu: React.FC<UserMenuProps> = ({
               {user.avatarText}
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-xs font-medium text-slate-200 truncate">
-                {user.name}
-              </div>
-              <div className="text-[11px] text-slate-500 truncate">
-                {user.plan}
-              </div>
+              <div className="text-xs font-medium text-slate-200 truncate">{user.name}</div>
+              <div className="text-[11px] text-slate-500 truncate">{user.plan}</div>
             </div>
           </div>
 
@@ -73,9 +65,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({
 
         <DropdownMenuSeparator className="bg-[#0F1C30] my-1" />
 
-        <div className="px-2.5 py-1 text-[11px] text-slate-500">
-          Nubi v1.0
-        </div>
+        <div className="px-2.5 py-1 text-[11px] text-slate-500">Nubi.ia v1.0</div>
       </DropdownMenuContent>
     </DropdownMenu>
   );

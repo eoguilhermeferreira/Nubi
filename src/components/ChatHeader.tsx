@@ -6,14 +6,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import {
-  Menu,
-  MoreVertical,
-  Share2,
-  Trash2,
-  Settings,
-  Info,
-} from "lucide-react";
+import { Menu, MoreVertical, Share2, Trash2, Settings, Info } from "lucide-react";
 import { toast } from "sonner";
 
 interface ChatHeaderProps {
@@ -26,7 +19,7 @@ interface ChatHeaderProps {
 }
 
 export const ChatHeader: React.FC<ChatHeaderProps> = ({
-  modelName = "Nubi 3.5",
+  modelName = "3.5",
   onOpenMobileSidebar,
   onClearChat,
   onOpenSettings,
@@ -49,12 +42,8 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
         </button>
 
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-slate-100 tracking-tight">
-            Nubi.ia
-          </span>
-          <span className="text-xs text-slate-500 font-normal">
-            • {modelName}
-          </span>
+          <span className="text-sm font-semibold text-slate-100 tracking-tight">Nubi.ia</span>
+          <span className="text-xs text-slate-500 font-normal">• {modelName}</span>
         </div>
       </div>
 
@@ -109,7 +98,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
               className="flex items-center gap-2 px-2.5 py-1.5 text-xs text-slate-300 hover:text-white hover:bg-[#0F1E36] rounded cursor-pointer"
             >
               <Info className="w-3.5 h-3.5 text-slate-400" />
-              <span>Sobre a Nubi</span>
+              <span>Sobre a Nubi.ia</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
