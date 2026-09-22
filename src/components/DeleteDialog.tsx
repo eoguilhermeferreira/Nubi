@@ -15,6 +15,7 @@ interface DeleteDialogProps {
   onClose: () => void;
   onConfirm: () => void;
   title?: string;
+  heading?: string;
 }
 
 export const DeleteDialog: React.FC<DeleteDialogProps> = ({
@@ -22,16 +23,19 @@ export const DeleteDialog: React.FC<DeleteDialogProps> = ({
   onClose,
   onConfirm,
   title = "esta conversa",
+  heading = "Excluir conversa?",
 }) => {
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
       <AlertDialogContent className="sm:max-w-md bg-[#0D1C33] border-[#182F52] text-slate-100">
         <AlertDialogHeader>
           <AlertDialogTitle className="text-lg font-semibold text-white">
-            Excluir conversa?
+            {heading}
           </AlertDialogTitle>
           <AlertDialogDescription className="text-slate-400 text-sm">
-            Tem certeza de que deseja excluir <span className="font-medium text-slate-200">"{title}"</span>? Esta ação não pode ser desfeita.
+            Tem certeza de que deseja excluir{" "}
+            <span className="font-medium text-slate-200">"{title}"</span>? Esta ação não pode ser
+            desfeita.
           </AlertDialogDescription>
         </AlertDialogHeader>
 

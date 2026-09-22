@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { Conversation, Message, Attachment, UserProfile } from "../types/chat";
+import { JournalEntry } from "../types/journal";
 import { supabase } from "@/integrations/supabase/client";
 import { generateAssistantReplyFn } from "../lib/nubi-ai.functions";
 import {
@@ -15,11 +16,18 @@ import {
   insertMessage,
   renameConversation as renameConversationApi,
 } from "../lib/nubi-api";
-import { Sidebar } from "./Sidebar";
+import {
+  createJournalEntry,
+  deleteJournalEntry as deleteJournalEntryApi,
+  fetchJournalEntries,
+  updateJournalEntry,
+} from "../lib/journal-api";
+import { Sidebar, SidebarView } from "./Sidebar";
 import { ChatHeader } from "./ChatHeader";
 import { ChatEmptyState } from "./ChatEmptyState";
 import { MessageList } from "./MessageList";
 import { ChatInput } from "./ChatInput";
+import { JournalView } from "./JournalView";
 import { VoiceCallModal } from "./VoiceCallModal";
 import { SettingsModal } from "./SettingsModal";
 import { AboutModal } from "./AboutModal";
@@ -55,6 +63,13 @@ export const OrionApp: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [isAboutOpen, setIsAboutOpen] = useState<boolean>(false);
   const [isVoiceModeOpen, setIsVoiceModeOpen] = useState<boolean>(false);
+
+  const [view, setView] = useState<SidebarView>("chat");
+  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
+  const [activeJournalId, setActiveJournalId] = useState<string | null>(null);
+  const [journalDraftKey, setJournalDraftKey] = useState<string>("draft-inicial");
+  const [isLoadingJournal, setIsLoadingJournal] = useState(true);
+  const [busyJournalId, setBusyJournalId] = useState<string | null>(null);
 
   // Sessão + perfil
   useEffect(() => {
@@ -103,6 +118,24 @@ export const OrionApp: React.FC = () => {
   useEffect(() => {
     if (userId) void loadConversations();
   }, [userId, loadConversations]);
+
+  // Entradas do diário
+  const loadJournalEntries = useCallback(async () => {
+    setIsLoadingJournal(true);
+    try {
+      const list = await fetchJournalEntries();
+      setJournalEntries(list);
+    } catch (err) {
+      console.error("[nubi] erro ao carregar diário:", err);
+      toast.error("Não foi possível carregar seu diário");
+    } finally {
+      setIsLoadingJournal(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (userId) void loadJournalEntries();
+  }, [userId, loadJournalEntries]);
 
   // Mensagens da conversa ativa
   useEffect(() => {
@@ -180,6 +213,63 @@ export const OrionApp: React.FC = () => {
       toast.error("Não foi possível excluir a conversa");
     } finally {
       setBusyConvId(null);
+    }
+  };
+
+  const handleNewJournalEntry = () => {
+    setActiveJournalId(null);
+    setJournalDraftKey(crypto.randomUUID());
+    setIsMobileOpen(false);
+  };
+
+  const handleSelectJournalEntry = (id: string) => {
+    setActiveJournalId(id);
+    setJournalDraftKey(id);
+    setIsMobileOpen(false);
+  };
+
+  const handleSaveJournalEntry = async (content: string) => {
+    if (!userId) return;
+    if (!activeJournalId) {
+      if (!content.trim()) return;
+      try {
+        const entry = await createJournalEntry(userId, content);
+        setJournalEntries((prev) => [entry, ...prev]);
+        setActiveJournalId(entry.id);
+      } catch (err) {
+        console.error("[nubi] erro ao criar entrada do diário:", err);
+        toast.error("Não foi possível salvar a entrada");
+      }
+      return;
+    }
+    try {
+      const updated = await updateJournalEntry(activeJournalId, content);
+      setJournalEntries((prev) =>
+        [updated, ...prev.filter((e) => e.id !== updated.id)].sort(
+          (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+        ),
+      );
+    } catch (err) {
+      console.error("[nubi] erro ao salvar entrada do diário:", err);
+      toast.error("Não foi possível salvar a entrada");
+    }
+  };
+
+  const handleDeleteJournalEntry = async (id: string) => {
+    setBusyJournalId(id);
+    try {
+      await deleteJournalEntryApi(id);
+      setJournalEntries((prev) => prev.filter((e) => e.id !== id));
+      if (activeJournalId === id) {
+        setActiveJournalId(null);
+        setJournalDraftKey(crypto.randomUUID());
+      }
+      toast.success("Entrada excluída");
+    } catch (err) {
+      console.error("[nubi] erro ao excluir entrada do diário:", err);
+      toast.error("Não foi possível excluir a entrada");
+    } finally {
+      setBusyJournalId(null);
     }
   };
 
@@ -348,6 +438,8 @@ export const OrionApp: React.FC = () => {
       )}
 
       <Sidebar
+        view={view}
+        onChangeView={setView}
         conversations={conversations}
         activeId={activeId}
         isLoading={isLoadingConversations}
@@ -356,6 +448,13 @@ export const OrionApp: React.FC = () => {
         onNewConversation={handleNewConversation}
         onRenameConversation={handleRenameConversation}
         onDeleteConversation={handleDeleteConversation}
+        journalEntries={journalEntries}
+        activeJournalId={activeJournalId}
+        isLoadingJournal={isLoadingJournal}
+        busyJournalId={busyJournalId}
+        onSelectJournalEntry={handleSelectJournalEntry}
+        onNewJournalEntry={handleNewJournalEntry}
+        onDeleteJournalEntry={handleDeleteJournalEntry}
         onOpenSettings={() => setIsSettingsOpen(true)}
         onSignOut={handleSignOut}
         user={user}
@@ -364,38 +463,49 @@ export const OrionApp: React.FC = () => {
       />
 
       <main className="flex-1 flex flex-col h-full min-w-0 bg-[#050B14] relative">
-        <ChatHeader
-          modelName={selectedModel}
-          onOpenMobileSidebar={() => setIsMobileOpen(true)}
-          onClearChat={handleClearCurrentChat}
-          onOpenSettings={() => setIsSettingsOpen(true)}
-          onOpenAbout={() => setIsAboutOpen(true)}
-          hasMessages={messages.length > 0}
-        />
-
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden relative">
-          {isLoadingMessages ? (
-            <div className="flex-1 flex items-center justify-center text-xs text-slate-600">
-              Carregando mensagens...
-            </div>
-          ) : showEmptyState && !isLoading ? (
-            <ChatEmptyState onSelectPrompt={handleSelectPrompt} />
-          ) : (
-            <MessageList
-              messages={messages}
-              isLoading={isLoading}
-              onRegenerate={handleRegenerateResponse}
+        {view === "chat" ? (
+          <>
+            <ChatHeader
+              modelName={selectedModel}
+              onOpenMobileSidebar={() => setIsMobileOpen(true)}
+              onClearChat={handleClearCurrentChat}
+              onOpenSettings={() => setIsSettingsOpen(true)}
+              onOpenAbout={() => setIsAboutOpen(true)}
+              hasMessages={messages.length > 0}
             />
-          )}
-        </div>
 
-        <ChatInput
-          onSendMessage={handleSendMessage}
-          onOpenVoiceMode={() => setIsVoiceModeOpen(true)}
-          isLoading={isLoading || isCreating}
-          userId={userId}
-          conversationId={activeId}
-        />
+            <div className="flex-1 flex flex-col min-h-0 overflow-hidden relative">
+              {isLoadingMessages ? (
+                <div className="flex-1 flex items-center justify-center text-xs text-slate-600">
+                  Carregando mensagens...
+                </div>
+              ) : showEmptyState && !isLoading ? (
+                <ChatEmptyState onSelectPrompt={handleSelectPrompt} />
+              ) : (
+                <MessageList
+                  messages={messages}
+                  isLoading={isLoading}
+                  onRegenerate={handleRegenerateResponse}
+                />
+              )}
+            </div>
+
+            <ChatInput
+              onSendMessage={handleSendMessage}
+              onOpenVoiceMode={() => setIsVoiceModeOpen(true)}
+              isLoading={isLoading || isCreating}
+              userId={userId}
+              conversationId={activeId}
+            />
+          </>
+        ) : (
+          <JournalView
+            key={journalDraftKey}
+            activeEntry={journalEntries.find((e) => e.id === activeJournalId) ?? null}
+            onSave={handleSaveJournalEntry}
+            onOpenMobileSidebar={() => setIsMobileOpen(true)}
+          />
+        )}
       </main>
 
       <VoiceCallModal
