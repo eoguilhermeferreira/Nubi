@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Message } from "../types/chat";
+import { Attachment, Message } from "../types/chat";
 import {
   Copy,
   Check,
@@ -12,6 +12,43 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { synthesizeSpeechFn } from "../lib/nubi-ai.functions";
+import { formatAttachmentSize, getAttachmentSignedUrl } from "../lib/attachments";
+
+const AttachmentPreview: React.FC<{ attachment: Attachment }> = ({ attachment }) => {
+  const [url, setUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (attachment.kind === "image") {
+      void getAttachmentSignedUrl(attachment.path).then((signed) => {
+        if (!cancelled) setUrl(signed);
+      });
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [attachment.path, attachment.kind]);
+
+  if (attachment.kind === "image") {
+    return url ? (
+      <img
+        src={url}
+        alt={attachment.name}
+        className="max-w-[200px] max-h-[200px] rounded-lg object-cover border border-[#0F1C30]"
+      />
+    ) : (
+      <div className="w-[120px] h-[80px] rounded-lg bg-[#050B14] animate-pulse" />
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-1.5 bg-[#091322] px-2 py-1 rounded text-xs text-slate-300">
+      <FileText className="w-3.5 h-3.5 text-slate-400" />
+      <span>{attachment.name}</span>
+      <span className="text-slate-500">{formatAttachmentSize(attachment.size)}</span>
+    </div>
+  );
+};
 
 interface MessageBubbleProps {
   message: Message;
@@ -109,13 +146,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
           {message.attachments && message.attachments.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-2 pb-2 border-b border-[#0F1C30]">
               {message.attachments.map((att) => (
-                <div
-                  key={att.id}
-                  className="flex items-center gap-1.5 bg-[#091322] px-2 py-1 rounded text-xs text-slate-300"
-                >
-                  <FileText className="w-3.5 h-3.5 text-slate-400" />
-                  <span>{att.name}</span>
-                </div>
+                <AttachmentPreview key={att.id} attachment={att} />
               ))}
             </div>
           )}

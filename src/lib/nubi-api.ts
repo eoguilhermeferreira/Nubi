@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { Conversation, Message, MessageRole } from "../types/chat";
+import type { Attachment, Conversation, Message, MessageRole } from "../types/chat";
 
 export interface ConversationRow {
   id: string;
@@ -13,6 +13,15 @@ export interface MessageRow {
   role: string;
   content: string;
   created_at: string;
+  attachments: unknown;
+}
+
+function parseAttachments(raw: unknown): Attachment[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.filter(
+    (item): item is Attachment =>
+      !!item && typeof item === "object" && typeof (item as Attachment).path === "string",
+  );
 }
 
 const formatTime = (iso: string) =>
@@ -30,6 +39,7 @@ export const mapMessage = (row: MessageRow): Message => ({
   role: (row.role === "assistant" ? "assistant" : "user") as MessageRole,
   content: row.content,
   createdAt: formatTime(row.created_at),
+  attachments: parseAttachments(row.attachments),
 });
 
 export const buildTitle = (text: string): string => {
@@ -50,17 +60,14 @@ export async function fetchConversations(): Promise<Conversation[]> {
 export async function fetchMessages(conversationId: string): Promise<Message[]> {
   const { data, error } = await supabase
     .from("messages")
-    .select("id, role, content, created_at")
+    .select("id, role, content, created_at, attachments")
     .eq("conversation_id", conversationId)
     .order("created_at", { ascending: true });
   if (error) throw error;
   return (data ?? []).map(mapMessage);
 }
 
-export async function createConversation(
-  userId: string,
-  title: string,
-): Promise<Conversation> {
+export async function createConversation(userId: string, title: string): Promise<Conversation> {
   const { data, error } = await supabase
     .from("conversations")
     .insert({ user_id: userId, title })
@@ -75,6 +82,7 @@ export async function insertMessage(params: {
   userId: string;
   role: MessageRole;
   content: string;
+  attachments?: Attachment[] | undefined;
 }): Promise<Message> {
   const { data, error } = await supabase
     .from("messages")
@@ -83,18 +91,16 @@ export async function insertMessage(params: {
       user_id: params.userId,
       role: params.role,
       content: params.content,
+      attachments: params.attachments ?? [],
     })
-    .select("id, role, content, created_at")
+    .select("id, role, content, created_at, attachments")
     .single();
   if (error) throw error;
   return mapMessage(data);
 }
 
 export async function renameConversation(id: string, title: string) {
-  const { error } = await supabase
-    .from("conversations")
-    .update({ title })
-    .eq("id", id);
+  const { error } = await supabase.from("conversations").update({ title }).eq("id", id);
   if (error) throw error;
 }
 
@@ -104,10 +110,7 @@ export async function deleteConversation(id: string) {
 }
 
 export async function deleteConversationMessages(conversationId: string) {
-  const { error } = await supabase
-    .from("messages")
-    .delete()
-    .eq("conversation_id", conversationId);
+  const { error } = await supabase.from("messages").delete().eq("conversation_id", conversationId);
   if (error) throw error;
 }
 
